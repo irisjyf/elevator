@@ -1,0 +1,1197 @@
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE EEPROM
+OBJECT MODULE PLACED IN ..\04_bin\MainCtrl\EEPROM.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE EEPROM.C OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND TABS(2) OBJECT(..\0
+                    -4_bin\MainCtrl\EEPROM.obj)
+
+line level    source
+
+   1          /*********************************************************
+   2               +---------------------------------------------+
+   3               |智趣电子       原创程序    多功能旋转POV LED |
+   4               +---------------------------------------------+     
+   5          
+   6           此源码版权属 智趣电子 全权享有，如欲引用，敬请署名并告知
+   7                  严禁随意用于商业目的，违者必究，后果自负
+   8                  智趣电子 
+   9                   ->产品咨询 QQ:1327074668 MSN:zhiqudz@163.com
+  10               ->产品网店 http://58788771.taobao.com/
+  11                            Tel:18106718021
+  12             /*********************************************/
+  13             /* 项 目:  平面/立体/三色/多功能旋转POV LED  */
+  14             /* 模 块： EEPROM模块              */
+  15             /* 功 能： EEPROM驱动                    */
+  16             /* 版 本： V3.0                */
+  17             /* 设 计： ZhiQu Studio            */
+  18             /* 时 间： 2013年7月5日            */
+  19             /* 修 改:  2013.7.5.19:00 创建项目       */
+  20             /* 说 明： 主控MCU STC115F08S2         */     
+  21             /*********************************************/
+  22          #include "EEPROM.H"
+  23          #include <string.h>
+  24          
+  25          typedef bit BOOL;
+  26          typedef unsigned char BYTE;
+  27          typedef unsigned int WORD;
+  28          //#define USED_BYTE_QTY_IN_ONE_SECTOR   1
+  29          //#define USED_BYTE_QTY_IN_ONE_SECTOR   2
+  30          //#define USED_BYTE_QTY_IN_ONE_SECTOR   4
+  31          //#define USED_BYTE_QTY_IN_ONE_SECTOR   8
+  32          //#define USED_BYTE_QTY_IN_ONE_SECTOR   16
+  33          //#define USED_BYTE_QTY_IN_ONE_SECTOR   32
+  34          //#define USED_BYTE_QTY_IN_ONE_SECTOR   64
+  35          #define USED_BYTE_QTY_IN_ONE_SECTOR   128
+  36          //#define USED_BYTE_QTY_IN_ONE_SECTOR   256
+  37          //#define USED_BYTE_QTY_IN_ONE_SECTOR   512
+  38          
+  39          //#define DEBUG_Data_Memory_Begin_Sector_addr     0x0400
+  40          
+  41          //BYTE xdata protect_buffer[USED_BYTE_QTY_IN_ONE_SECTOR];
+  42          
+  43          #define ERROR   0
+  44          #define OK      1
+  45          /*----------------------------
+  46          软件延时
+  47          ----------------------------*/
+  48          void Delay1() //延时程序
+  49          {
+  50   1          uint i;
+  51   1          uint d=100;
+  52   1          while (d--)
+  53   1          {
+  54   2              i=10;
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 2   
+
+  55   2              while (i--);
+  56   2          }
+  57   1      }
+  58          
+  59          /*----------------------------
+  60          关闭IAP
+  61          ----------------------------*/
+  62          void IapIdle()
+  63          {
+  64   1          IAP_CONTR = 0;                  //关闭IAP功能
+  65   1          IAP_CMD = 0;                    //清除命令寄存器
+  66   1          IAP_TRIG = 0;                   //清除触发寄存器
+  67   1          IAP_ADDRH = 0x80;               //将地址设置到非IAP区域
+  68   1          IAP_ADDRL = 0;
+  69   1      }
+  70          
+  71          /*----------------------------
+  72          从ISP/IAP/EEPROM区域读取一字节
+  73          ----------------------------*/
+  74          uchar IapReadByte(uint addr)
+  75          {
+  76   1          uchar dat;                       //数据缓冲区
+  77   1      
+  78   1          IAP_CONTR = ENABLE_IAP;         //使能IAP
+  79   1          IAP_CMD = CMD_READ;             //设置IAP命令
+  80   1          IAP_ADDRL = addr;               //设置IAP低地址
+  81   1          IAP_ADDRH = addr >> 8;          //设置IAP高地址
+  82   1          IAP_TRIG = 0x5a;                //写触发命令(0x5a)
+  83   1          IAP_TRIG = 0xa5;                //写触发命令(0xa5)
+  84   1          _nop_();                        //等待ISP/IAP/EEPROM操作完成
+  85   1          dat = IAP_DATA;                 //读ISP/IAP/EEPROM数据
+  86   1          IapIdle();                      //关闭IAP功能
+  87   1      
+  88   1          return dat;                     //返回
+  89   1      }
+  90          
+  91          /*----------------------------
+  92          写一字节数据到ISP/IAP/EEPROM区域
+  93          ----------------------------*/
+  94          void IapProgramByte(uint addr, uchar dat)
+  95          {
+  96   1          IAP_CONTR = ENABLE_IAP;         //使能IAP
+  97   1          IAP_CMD = CMD_PROGRAM;          //设置IAP命令
+  98   1          IAP_ADDRL = addr;               //设置IAP低地址
+  99   1          IAP_ADDRH = addr >> 8;          //设置IAP高地址
+ 100   1          IAP_DATA = dat;                 //写ISP/IAP/EEPROM数据
+ 101   1          IAP_TRIG = 0x5a;                //写触发命令(0x5a)
+ 102   1          IAP_TRIG = 0xa5;                //写触发命令(0xa5)
+ 103   1          _nop_();                        //等待ISP/IAP/EEPROM操作完成
+ 104   1          IapIdle();
+ 105   1      }
+ 106          void IapProgramBytes(uint addr,uchar *dat,unsigned int length)
+ 107          {
+ 108   1          unsigned char i=0;
+ 109   1        for(i=0;i<length;i++)
+ 110   1        {
+ 111   2          IapProgramByte(addr+i,dat[i]);
+ 112   2        }
+ 113   1      }
+ 114          void IapReadBytes(uint addr,unsigned char *dat,unsigned int length)
+ 115          {
+ 116   1        unsigned char i=0;
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 3   
+
+ 117   1        for(i=0;i<length;i++)
+ 118   1        {
+ 119   2          dat[i]=IapReadByte(addr+i);
+ 120   2        }
+ 121   1      }
+ 122           /*********************
+ 123           设置刷卡状态
+ 124           **********************/
+ 125          uchar SetDevice(uchar status)
+ 126          {
+ 127   1        uchar temp[16];
+ 128   1        IapReadBytes(ENABLEORNOTSHANQU, temp, 16);
+ 129   1      
+ 130   1        IapEraseSector(ENABLEORNOTSHANQU);
+ 131   1      
+ 132   1        temp[0] = status;
+ 133   1        //IapProgramByte(ENABLEORNOTSHANQU,status);
+ 134   1        IapProgramBytes(ENABLEORNOTSHANQU,temp, 16);
+ 135   1        return 1;
+ 136   1      }
+ 137          /***********************************
+ 138          得到刷卡器状态
+ 139          **************************************/
+ 140          uchar GetDevice()
+ 141          {
+ 142   1        uchar ret;
+ 143   1        ret = IapReadByte(DEVICE_STATUS_ADDR);
+ 144   1        return ret;
+ 145   1      }
+ 146          
+ 147          
+ 148          uchar ReadOffset()
+ 149          {
+ 150   1        uchar ucData = 0;
+ 151   1        ucData = IapReadByte(OFFSET_ADDR);
+ 152   1        if(ucData >= 0x20)
+ 153   1          return 0;
+ 154   1        return ucData;
+ 155   1      }
+ 156          
+ 157          //uchar WriteOffset(uchar chOffset)
+ 158          //{
+ 159          //  uchar xdata ucData = 0;
+ 160          //  
+ 161          //  uchar xdata temp[16];
+ 162          //  IapReadBytes(ENABLEORNOTSHANQU, temp, 16);
+ 163          
+ 164          //  temp[OFFSET_ADDR] = chOffset;
+ 165          //  IapEraseSector(ENABLEORNOTSHANQU);
+ 166          //  
+ 167          //  IapProgramBytes(ENABLEORNOTSHANQU, temp, 16);
+ 168          
+ 169          //  if(IapReadByte(OFFSET_ADDR) == chOffset)
+ 170          //    return Do_True;
+ 171          //  return Do_False;
+ 172          //}
+ 173          
+ 174          
+ 175          unsigned long ReadAgentID(void)
+ 176          {
+ 177   1        unsigned long lAgentID = 0;
+ 178   1        unsigned char datas[4]= {0xff, 0xff, 0xff, 0xff};
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 4   
+
+ 179   1        IapReadBytes(AGENT_DATA_ADDR, datas, 4);
+ 180   1      
+ 181   1        if(datas[0] == 0xFF 
+ 182   1          && datas[1] == 0xFF 
+ 183   1          && datas[2] == 0xFF 
+ 184   1          && datas[3] == 0xFF)
+ 185   1        {
+ 186   2          lAgentID = 0xFFFFFFFF;
+ 187   2        }
+ 188   1        else
+ 189   1        {
+ 190   2          lAgentID = (datas[0] << 24) 
+ 191   2            + (datas[1] << 16) 
+ 192   2            + (datas[2] << 8) 
+ 193   2            + datas[3];
+ 194   2        }
+ 195   1        return lAgentID;
+ 196   1      }
+ 197          
+ 198          uchar WriteAgentID(uchar datas[])
+ 199          { 
+ 200   1        uchar xdata temp[16] = {0};
+ 201   1        IapReadBytes(DEVICE_STATUS_ADDR, temp, 16);
+ 202   1      
+ 203   1        temp[2] = datas[0];
+ 204   1        temp[3] = datas[1];
+ 205   1        temp[4] = datas[2];
+ 206   1        temp[5] = datas[3];
+ 207   1        IapEraseSector(DEVICE_STATUS_ADDR);
+ 208   1        
+ 209   1        IapProgramBytes(ENABLEORNOTSHANQU, temp, 16);
+ 210   1      
+ 211   1        IapReadBytes(AGENT_DATA_ADDR, (unsigned char *)&temp, 4);
+ 212   1      
+ 213   1        if(temp[0] == datas[0] 
+ 214   1          && temp[1] == datas[1] 
+ 215   1          && temp[2] == datas[2] 
+ 216   1          && temp[3] == datas[3])
+ 217   1          
+ 218   1          return Do_True;
+ 219   1        
+ 220   1        return Do_False;
+ 221   1      }
+ 222          
+ 223          
+ 224          //uchar WriteSectionPsw(uchar datas[])
+ 225          //{ 
+ 226          //  uchar xdata temp[16] = {0};
+ 227          //  IapReadBytes(DEVICE_STATUS_ADDR, temp, 16);
+ 228          
+ 229          //  memcpy(temp + PSW_DATA_ADDR,datas,4);
+ 230          //  
+ 231          //  IapEraseSector(DEVICE_STATUS_ADDR);
+ 232          //  
+ 233          //  IapProgramBytes(ENABLEORNOTSHANQU, temp, 16);
+ 234          
+ 235          //  IapReadBytes(PSW_DATA_ADDR, (unsigned char *)&temp, 4);
+ 236          
+ 237          //  if(temp[0] == datas[0] 
+ 238          //    && temp[1] == datas[1] 
+ 239          //    && temp[2] == datas[2] 
+ 240          //    && temp[3] == datas[3])
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 5   
+
+ 241          //    
+ 242          //    return Do_True;
+ 243          //  
+ 244          //  return Do_False;
+ 245          //}
+ 246          
+ 247          
+ 248          void WriteStatusData(uchar datas[])
+ 249          { 
+ 250   1        uchar xdata temp[16] = {0};
+ 251   1        uchar xdata temp1[16] = {0};
+ 252   1        uchar xdata i = 0;
+ 253   1        uchar xdata ucFlag = 0;
+ 254   1        
+ 255   1        IapReadBytes(DEVICE_STATUS_ADDR, temp, 16);
+ 256   1      
+ 257   1        for(i = AGENT_FLAG_ADDR; i < AGENT_FLAG_ADDR + 4; i++)
+ 258   1        {
+ 259   2          if(temp[i] != 0xFF)
+ 260   2          {
+ 261   3            ucFlag = 1;
+ 262   3            break;
+ 263   3          }
+ 264   2        }
+ 265   1      
+ 266   1        if(ucFlag == 1)
+ 267   1        {
+ 268   2          memcpy(temp1, temp, 16);
+ 269   2      
+ 270   2          memcpy(temp + 1, datas, 14);
+ 271   2      
+ 272   2          memcpy(temp + AGENT_DATA_ADDR, temp1 + AGENT_DATA_ADDR, 4);
+ 273   2      
+ 274   2          temp[AGENT_FLAG_ADDR] = temp1[AGENT_FLAG_ADDR];
+ 275   2      
+ 276   2          temp[INNER_FLAG_ADDR] = 0x01;
+ 277   2        }
+ 278   1        else
+ 279   1        {
+ 280   2          memcpy(temp + 1, datas, 14);
+ 281   2          temp[INNER_FLAG_ADDR] = 0x01;   
+ 282   2        }
+ 283   1        
+ 284   1        IapEraseSector(DEVICE_STATUS_ADDR);
+ 285   1        
+ 286   1        IapProgramBytes(ENABLEORNOTSHANQU, temp, 16);
+ 287   1      }
+ 288          
+ 289          void ReadStatusData(uchar datas[])
+ 290          { 
+ 291   1        uchar xdata temp[16] = {0};
+ 292   1        IapReadBytes(DEVICE_STATUS_ADDR, temp, 16);
+ 293   1      
+ 294   1        memcpy(datas, temp + 1, 14);
+ 295   1        
+ 296   1      }
+ 297          
+ 298          void ReadSectionPsw(uchar datas[])
+ 299          { 
+ 300   1        IapReadBytes(PSW_DATA_ADDR, datas, 4);
+ 301   1      }
+ 302          
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 6   
+
+ 303          
+ 304          uchar ReadVerifyAgentFlag(void)
+ 305          {
+ 306   1        uchar temp = 0;
+ 307   1        temp = IapReadByte(AGENT_FLAG_ADDR);
+ 308   1        if(temp == 0x01)
+ 309   1          return DO_VERIFY_AGENT;
+ 310   1        return DIS_VERIFY_AGENT;
+ 311   1      }
+ 312          
+ 313          
+ 314          uchar ReadPasswordFlag(void)
+ 315          {
+ 316   1        uchar chFlag = 0;
+ 317   1        chFlag = IapReadByte(OFFSET_FLAG_ADDR);
+ 318   1        if(chFlag  == 0x01)
+ 319   1          return DO_PASSWORD;
+ 320   1        return DIS_PASSWORD;
+ 321   1      
+ 322   1      }
+ 323          
+ 324          uchar ReadReverseCheckFlag(void)
+ 325          {
+ 326   1        uchar chFlag = 0;
+ 327   1        chFlag = IapReadByte(REVERSE_FLAG_ADDR);
+ 328   1        if(chFlag == 0x01)
+ 329   1          return DO_REVERSE;
+ 330   1        return DIS_REVERSE;
+ 331   1      }
+ 332          
+ 333          uchar ReadInnerFlag(void)
+ 334          {
+ 335   1        uchar chFlag = 0;
+ 336   1        chFlag = IapReadByte(INNER_FLAG_ADDR);
+ 337   1        return chFlag;
+ 338   1      }
+ 339          
+ 340          
+ 341          uchar ReadDisableCounterFlag(void)
+ 342          {
+ 343   1        uchar temp = 0;
+ 344   1        temp = IapReadByte(AGENT_FLAG_ADDR);
+ 345   1        if(temp != 0xFF && 
+ 346   1          (temp & DISABLE_COUNTER) == DISABLE_COUNTER)
+ 347   1          return DISABLE_COUNTER;
+ 348   1        return ENABLE_COUNTER;
+ 349   1      }
+ 350          
+ 351          
+ 352          
+ 353          uchar ReadAgentFlagData(void)
+ 354          {
+ 355   1        uchar temp = 0;
+ 356   1        temp = IapReadByte(AGENT_FLAG_ADDR);
+ 357   1        return temp;
+ 358   1      }
+ 359          
+ 360          uchar EnableCounter()
+ 361          {
+ 362   1        uchar xdata temp[16] = {0};
+ 363   1        
+ 364   1        IapReadBytes(DEVICE_STATUS_ADDR, temp, 16);
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 7   
+
+ 365   1      
+ 366   1        temp[AGENT_FLAG_ADDR] &= ENABLE_COUNTER;
+ 367   1        
+ 368   1        IapEraseSector(DEVICE_STATUS_ADDR);
+ 369   1        
+ 370   1        IapProgramBytes(ENABLEORNOTSHANQU, temp, 16);
+ 371   1      
+ 372   1        if((temp[AGENT_FLAG_ADDR] & DISABLE_COUNTER) != DISABLE_COUNTER)
+ 373   1          return ENABLE_COUNTER;
+ 374   1        return DISABLE_COUNTER;
+ 375   1      }
+ 376          
+ 377          
+ 378          uchar DisableCounter()
+ 379          {
+ 380   1        uchar xdata temp[16] = {0};
+ 381   1        
+ 382   1        IapReadBytes(DEVICE_STATUS_ADDR, temp, 16);
+ 383   1      
+ 384   1        temp[AGENT_FLAG_ADDR] |= DISABLE_COUNTER;
+ 385   1        
+ 386   1        IapEraseSector(DEVICE_STATUS_ADDR);
+ 387   1        
+ 388   1        IapProgramBytes(ENABLEORNOTSHANQU, temp, 16);
+ 389   1      
+ 390   1        if((temp[AGENT_FLAG_ADDR] & DISABLE_COUNTER) != DISABLE_COUNTER)
+ 391   1          return ENABLE_COUNTER;
+ 392   1        
+ 393   1        return DISABLE_COUNTER;
+ 394   1      }
+ 395          
+ 396          
+ 397          
+ 398          //void WriteInnerFlag(uchar uchData)
+ 399          //{
+ 400          //  uchar xdata temp[16] = {0};
+ 401          //  IapReadBytes(DEVICE_STATUS_ADDR, temp, 16);
+ 402          //    
+ 403          //  IapEraseSector(DEVICE_STATUS_ADDR);
+ 404          
+ 405          //  temp[INNER_FLAG_ADDR] = uchData;
+ 406          //  
+ 407          //  IapProgramBytes(ENABLEORNOTSHANQU, temp, 16);
+ 408          //}
+ 409          
+ 410          
+ 411          //uchar WritePasswordFlag(uchar ucData)
+ 412          //{
+ 413          //  uchar chFlag = 0;
+ 414          //  uchar xdata temp[16] = {0};
+ 415          //  IapReadBytes(DEVICE_STATUS_ADDR, temp, 16);
+ 416          
+ 417          //  temp[OFFSET_FLAG_ADDR] = ucData;
+ 418          //  
+ 419          //  IapEraseSector(DEVICE_STATUS_ADDR);
+ 420          //  
+ 421          //  IapProgramBytes(ENABLEORNOTSHANQU, temp, 16);
+ 422          
+ 423          //  chFlag = ReadPasswordFlag();
+ 424          
+ 425          //  if(chFlag == ucData)    
+ 426          //    return Do_True;
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 8   
+
+ 427          //  
+ 428          //  return Do_False;
+ 429          //}
+ 430          
+ 431          
+ 432          uchar WriteVerifyAgentFlag(uchar ucData)
+ 433          {
+ 434   1        unsigned char ucFlag;
+ 435   1        uchar temp[16] = {0};
+ 436   1        IapReadBytes(DEVICE_STATUS_ADDR, temp, 16);
+ 437   1      
+ 438   1        temp[AGENT_FLAG_ADDR] = ucData;
+ 439   1        IapEraseSector(DEVICE_STATUS_ADDR);
+ 440   1      
+ 441   1        IapProgramBytes(ENABLEORNOTSHANQU, temp, 16);
+ 442   1        
+ 443   1        ucFlag = IapReadByte(AGENT_FLAG_ADDR);
+ 444   1      
+ 445   1        if(ucFlag == ucData )   
+ 446   1          return Do_True;
+ 447   1        
+ 448   1        return Do_False;
+ 449   1      }
+ 450          
+ 451          
+ 452          
+ 453          /******************************************************
+ 454          //添加黑名单
+ 455          //*******************************************************/
+ 456          
+ 457          //uchar AddBlackList(uchar iType, uchar *list)
+ 458          //{
+ 459          //  uint i=0;
+ 460          //  uint AddrBase = BLACK_LIST;
+ 461          //  uchar temp[4];
+ 462          //  for(i=0;i<4;i++)
+ 463          //  {
+ 464          //    temp[i]=list[i];
+ 465          //  }
+ 466          //  if(MANAGER_CARD == iType)
+ 467          //    AddrBase = MGR_BLACK_LIST;
+ 468          //  
+ 469          //  for(i=0;i<1024;i++)
+ 470          //  {
+ 471          //    if(IapReadByte(AddrBase + i*4) == 0xff)
+ 472          //    {
+ 473          //       IapProgramBytes(AddrBase + 4*i,temp,4);
+ 474          //       return 1;
+ 475          //    }
+ 476          //  }
+ 477          //  return 0; 
+ 478          //}  
+ 479          /********************************************************\
+ 480          //修改黑名单
+ 481          //***********************************************************/
+ 482          /*
+ 483          uchar modifyBlackList(uint items,uchar *list)
+ 484          {
+ 485            uchar xdata temp[10];
+ 486            uchar i=0;
+ 487            IapReadBytes(BLACK_LIST_COUNT,temp,2);
+ 488            if(temp[0]*256+temp[1]>items)
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 9   
+
+ 489            return 0;
+ 490              IapReadBytes(((items*4)/SECTION)*SECTION,temp,SECTION);
+ 491            IapEraseSector(((items*4)/SECTION)*SECTION);
+ 492            for(i=0;i<4;i++)
+ 493            {
+ 494              temp[(items*4)%SECTION+i]=list[i];
+ 495            }
+ 496            IapProgramBytes(((items*4)/SECTION)*SECTION,temp,SECTION);
+ 497            return 1;
+ 498          } 
+ 499          */
+ 500          
+ 501          /**********************************************************
+ 502          //清空黑名单
+ 503          //***********************************************************/ 
+ 504          
+ 505          //void ClearBlackList()
+ 506          //{
+ 507          //  uint i=0;
+ 508          //  
+ 509          //  for(i=0;i<8;i++)
+ 510          //  {
+ 511          //    IapEraseSector(BLACK_LIST + i * SECTION);
+ 512          //  }
+ 513          //  for(i=0;i<8;i++)
+ 514          //  {
+ 515          //    IapEraseSector(MGR_BLACK_LIST + i * SECTION);
+ 516          //  }
+ 517          //}  
+ 518          
+ 519          /**********************************************************
+ 520          删除黑名单
+ 521          ***********************************************************/ 
+ 522          /*
+ 523          uchar deleteBlackList(uchar iType, uchar *list)
+ 524          {
+ 525            uchar xdata temp[128];
+ 526            uint i=0;
+ 527            uint k;
+ 528            uchar j=0;
+ 529            uint AddrBase = BLACK_LIST;
+ 530            
+ 531            for(i=0;i<1024;i++)
+ 532            {
+ 533              if(IapReadByte(BLACK_LIST+i*4)==list[0]&&IapReadByte(BLACK_LIST+i*4+1)==list[1]&&
+ 534                 IapReadByte(BLACK_LIST+i*4+2)==list[2])
+ 535              {  
+ 536                //IapReadBytes(BLACK_LIST+((i*4)/SECTION)*SECTION,temp,SECTION/4);
+ 537                for(j=0;j<4;j++)
+ 538                {
+ 539                  IapReadBytes(BLACK_LIST+((i*4)/SECTION)*SECTION+j*128,temp,SECTION/4);
+ 540                  for(k=0;k<32;k++){
+ 541                    if(temp[4*k]==list[0]&&temp[4*k+1]==list[1]&&temp[4*k+2]==list[2])
+ 542                    {
+ 543                      temp[4*k]=0xff;temp[4*k+1]=0xff;temp[4*k+2]=0xff;
+ 544                      break;
+ 545                    }
+ 546                  }
+ 547                  
+ 548                  IapReadBytes(TEMP_ADDRESS+j*128,temp,SECTION/4);
+ 549                }
+ 550          
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 10  
+
+ 551                 IapEraseSector(BLACK_LIST+((i*4)/SECTION)*SECTION);
+ 552          
+ 553                 for(j=0;j<4;j++){
+ 554                 IapReadBytes(TEMP_ADDRESS+j*128,temp,SECTION/4);
+ 555                 IapProgramBytes(BLACK_LIST+((i*4)/SECTION)*SECTION+j*128,temp,SECTION/4);
+ 556                 }
+ 557                 //IapProgramBytes(BLACK_LIST+((i*4)/SECTION)*SECTION,temp,SECTION);
+ 558                 return 1;
+ 559              }
+ 560            }
+ 561            return 0;
+ 562            
+ 563          }  
+ 564          
+ 565          */
+ 566          
+ 567          /**********************************************************
+ 568          //删除黑名单
+ 569          //***********************************************************/ 
+ 570          
+ 571          //uchar deleteBlackList(uchar iType, uchar *list)
+ 572          //{
+ 573          //  uchar xdata temp[128];
+ 574          //  uint i=0;
+ 575          //  uint k;
+ 576          //  uchar j=0;
+ 577          //  uint AddrBase = BLACK_LIST;
+ 578          
+ 579          //  if(iType == MANAGER_CARD)
+ 580          //    AddrBase = MGR_BLACK_LIST;
+ 581          //  
+ 582          //  for(i=0;i<1024;i++)
+ 583          //  {
+ 584          //    if(IapReadByte(AddrBase + i*4) == list[0]
+ 585          //      &&IapReadByte(AddrBase + i*4 + 1) == list[1]
+ 586          //      &&IapReadByte(AddrBase + i*4 + 2) == list[2])
+ 587          //    {  
+ 588          //      //IapReadBytes(BLACK_LIST+((i*4)/SECTION)*SECTION,temp,SECTION/4);
+ 589          //      for(j=0;j<4;j++)
+ 590          //      {
+ 591          //        IapReadBytes(AddrBase+((i*4)/SECTION)*SECTION+j*128,temp,SECTION/4);
+ 592          
+ 593          //        for(k=0;k<32;k++)
+ 594          //        {
+ 595          //          if(temp[4*k]==list[0]
+ 596          //            &&temp[4*k+1]==list[1]
+ 597          //            &&temp[4*k+2]==list[2])
+ 598          //          {
+ 599          //            temp[4*k]=0xff;temp[4*k+1]=0xff;temp[4*k+2]=0xff;
+ 600          //            break;
+ 601          //          }
+ 602          //        }
+ 603          //        
+ 604          //        IapReadBytes(TEMP_ADDRESS+j*128,temp,SECTION/4);
+ 605          //      }
+ 606          
+ 607          //      IapEraseSector(AddrBase+((i*4)/SECTION)*SECTION);
+ 608          
+ 609          //      for(j=0;j<4;j++)
+ 610          //      {
+ 611          //        IapReadBytes(AddrBase+j*128,temp,SECTION/4);
+ 612          //        IapProgramBytes(AddrBase+((i*4)/SECTION)*SECTION+j*128,temp,SECTION/4);
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 11  
+
+ 613          //      }
+ 614          //       //IapProgramBytes(BLACK_LIST+((i*4)/SECTION)*SECTION,temp,SECTION);
+ 615          //      return 1;
+ 616          //    }
+ 617          //  }
+ 618          //  return 0;
+ 619          //  
+ 620          //}  
+ 621          
+ 622          
+ 623          
+ 624          /**********************************************************
+ 625          
+ 626          //**************************************************************/
+ 627          //uchar checkBlackList(uchar iType, uchar *list)
+ 628          //{
+ 629          //  uint i=0;
+ 630          //  uchar temp[4];
+ 631          //  uint AddrBase = BLACK_LIST;
+ 632          
+ 633          //  if(iType == MANAGER_CARD)
+ 634          //    AddrBase = MGR_BLACK_LIST;
+ 635          //  
+ 636          //  for(i=0;i < 1024; i++)
+ 637          //  {
+ 638          //    IapReadBytes(AddrBase + 4*i,temp,4);
+ 639          //    if(temp[0] == list[0] 
+ 640          //      && temp[1] == list[1]
+ 641          //      &&temp[2] == list[2])
+ 642          //    {
+ 643          //      return 1;
+ 644          //    }
+ 645          //  }
+ 646          //  return 0;
+ 647          //}
+ 648          
+ 649          
+ 650          /******************************************************
+ 651          添加反写列表
+ 652          *******************************************************/
+ 653          
+ 654          uchar RecordCardList(uchar iType, uchar *list, uchar ucData)
+ 655          {
+ 656   1        uint  i=0;
+ 657   1        uint  AddrBase = BLACK_LIST;
+ 658   1        uchar xdata temp[128];
+ 659   1        uchar  ucCardNo[6];
+ 660   1        uchar  ucFlag = 0;
+ 661   1        uchar  k = 0;
+ 662   1        uchar  j = 0;
+ 663   1        
+ 664   1        for(i=0;i<4;i++)
+ 665   1        {
+ 666   2          temp[i]=list[i];
+ 667   2        }
+ 668   1      
+ 669   1        temp[4] = 0xFF; 
+ 670   1        temp[5] = ucData;
+ 671   1        
+ 672   1        if(MANAGER_CARD == iType)
+ 673   1          AddrBase = MGR_BLACK_LIST;
+ 674   1        
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 12  
+
+ 675   1        for(i=0;i<1024;i++)
+ 676   1        {   
+ 677   2          IapReadBytes(AddrBase + i*6, ucCardNo, 6);
+ 678   2      
+ 679   2          if(ucCardNo[0] == 0xFF 
+ 680   2            && ucCardNo[1] == 0xFF 
+ 681   2            && ucCardNo[2] == 0xFF )
+ 682   2            {
+ 683   3              IapProgramBytes(AddrBase + 6 * i,temp,6);
+ 684   3              return 1;
+ 685   3            }
+ 686   2          
+ 687   2          if(ucCardNo[0] == list[0]
+ 688   2            && ucCardNo[1] == list[1]
+ 689   2            && ucCardNo[2] == list[2] )
+ 690   2          {
+ 691   3            for(j=0;j<4;j++)
+ 692   3            {
+ 693   4              //IapReadBytes(AddrBase + ((i*6)/SECTION)*SECTION + j*128, temp, SECTION/4);
+ 694   4              IapReadBytes(AddrBase + (i*6) & 0xFE00 + j * 128, temp, 128);
+ 695   4              
+ 696   4              if(ucFlag == 1)
+ 697   4                continue;
+ 698   4              
+ 699   4              for(k=0;k<32;k++)
+ 700   4              {
+ 701   5                if(temp[6*k] == list[0]
+ 702   5                  &&temp[6*k+1] == list[1]
+ 703   5                  &&temp[6*k+2] == list[2])
+ 704   5                {
+ 705   6                  temp[6*k+4] = 0xFF;
+ 706   6                  temp[6*k+5] = ucData;
+ 707   6                  ucFlag = 1;
+ 708   6                  break;
+ 709   6                }
+ 710   5              }
+ 711   4              
+ 712   4              IapProgramBytes(TEMP_ADDRESS + j * 128, temp, 128);
+ 713   4            }
+ 714   3      
+ 715   3            IapEraseSector((AddrBase+(i*6)) & 0xFE00 );
+ 716   3      
+ 717   3            for(j=0;j<4;j++)
+ 718   3            {
+ 719   4              IapReadBytes(TEMP_ADDRESS + j * 128, temp, 128);
+ 720   4              IapProgramBytes(AddrBase + (i*6) & 0xFE00 + j*128, temp, 128);
+ 721   4            }
+ 722   3      
+ 723   3            IapEraseSector(TEMP_ADDRESS);
+ 724   3            
+ 725   3            return 1;
+ 726   3          }
+ 727   2        }
+ 728   1        return 0; 
+ 729   1      }  
+ 730          
+ 731          
+ 732          /**********************************************************
+ 733          清空黑名单
+ 734          ***********************************************************/ 
+ 735          
+ 736          void ClearAllReverseList()
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 13  
+
+ 737          {
+ 738   1        uint xdata i=0;
+ 739   1        
+ 740   1        for(i=0;i<8;i++)
+ 741   1        {
+ 742   2          IapEraseSector(BLACK_LIST + i * SECTION);
+ 743   2        }
+ 744   1        for(i=0;i<8;i++)
+ 745   1        {
+ 746   2          IapEraseSector(MGR_BLACK_LIST + i * SECTION);
+ 747   2        }
+ 748   1      }  
+ 749          
+ 750          /**********************************************************
+ 751          //删除黑名单
+ 752          //***********************************************************/ 
+ 753          
+ 754          //uchar RecordReverseData(uchar iType, uchar *list, uchar ucData)
+ 755          //{
+ 756          //  uchar xdata temp[128];
+ 757          //  uint xdata i=0;
+ 758          //  uchar xdata k;
+ 759          //  uchar xdata j=0;
+ 760          //  //uint xdata  AddrBase = BLACK_LIST;
+ 761          //  
+ 762          //  for(i=0;i<1024;i++)
+ 763          //  {
+ 764          //    if(IapReadByte(BLACK_LIST + i*6) ==list[0]
+ 765          //      &&IapReadByte(BLACK_LIST + i*6 + 1)==list[1]
+ 766          //      &&IapReadByte(BLACK_LIST + i*6 + 2)==list[2])
+ 767          //    {  
+ 768          //      for(j=0;j<4;j++)
+ 769          //      {
+ 770          //        IapReadBytes(BLACK_LIST + ( (i*6) / SECTION) * SECTION + j*128,temp, SECTION/4);
+ 771          //        for(k=0;k<32;k++)
+ 772          //        {
+ 773          //          if(temp[6 * k] == list[0]
+ 774          //            &&temp[6*k+1] == list[1]
+ 775          //            &&temp[6*k+2] == list[2])
+ 776          //          {
+ 777          //            //temp[6*k] = 0xff;
+ 778          //            //temp[6*k+1] = 0xff;
+ 779          //            //temp[6*k+2] = 0xff;
+ 780          
+ 781          //            temp[6*k+5] = ucData;
+ 782          //            
+ 783          //            break;
+ 784          //          }
+ 785          //        }
+ 786          //        
+ 787          //        IapReadBytes(TEMP_ADDRESS+j*128,temp,SECTION/4);
+ 788          //      }
+ 789          
+ 790          //       IapEraseSector(BLACK_LIST+((i*6)/SECTION)*SECTION);
+ 791          
+ 792          //       for(j=0;j<4;j++)
+ 793          //       {
+ 794          //        IapReadBytes(TEMP_ADDRESS + j * 128,temp,SECTION/4);
+ 795          //        IapProgramBytes(BLACK_LIST + ((i * 6)/SECTION)*SECTION + j*128,temp,SECTION/4);
+ 796          //       }
+ 797          //       
+ 798          //       return 1;
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 14  
+
+ 799          //    }
+ 800          //  }
+ 801          //  return 0;
+ 802          //  
+ 803          //}  
+ 804          
+ 805          
+ 806          
+ 807          /**********************************************************
+ 808          删除黑名单
+ 809          ***********************************************************/ 
+ 810          
+ 811          uchar DeleteBlackList(uchar iType, uchar *list)
+ 812          {
+ 813   1        uchar xdata temp[128];
+ 814   1        uint   i=0;
+ 815   1        uchar   k;
+ 816   1        uchar  j=0;
+ 817   1        uint  AddrBase = BLACK_LIST;
+ 818   1      
+ 819   1        if(iType == MANAGER_CARD)
+ 820   1          AddrBase = MGR_BLACK_LIST;
+ 821   1        
+ 822   1        for(i=0; i<1024; i++)
+ 823   1        {
+ 824   2        
+ 825   2          if(IapReadByte(AddrBase + i*6) == 0xFF
+ 826   2            &&IapReadByte(AddrBase + i*6 + 1) == 0xFF
+ 827   2            &&IapReadByte(AddrBase + i*6 + 2) == 0xFF)
+ 828   2            {
+ 829   3              return 1;
+ 830   3            }
+ 831   2          if(IapReadByte(AddrBase + i*6) == list[0]
+ 832   2            &&IapReadByte(AddrBase + i*6 + 1) == list[1]
+ 833   2            &&IapReadByte(AddrBase + i*6 + 2) == list[2])
+ 834   2          {  
+ 835   3            for(j=0;j<4;j++)
+ 836   3            {
+ 837   4              IapReadBytes(AddrBase + (i*6) & 0xFE00 + j*128, temp, 128);
+ 838   4      
+ 839   4              for(k=0;k<32;k++)
+ 840   4              {
+ 841   5                if(temp[6*k] == list[0]
+ 842   5                  &&temp[6*k+1] == list[1]
+ 843   5                  &&temp[6*k+2] == list[2])
+ 844   5                {
+ 845   6                  //temp[6*k] =0xff;
+ 846   6                  //temp[6*k+1] =0xff;
+ 847   6                  //temp[6*k+2] =0xff;
+ 848   6                  
+ 849   6                  temp[6*k+4] =0xFF;
+ 850   6                  
+ 851   6                  break;
+ 852   6                }
+ 853   5              }
+ 854   4              
+ 855   4              IapProgramBytes(TEMP_ADDRESS + j * 128, temp, 128);
+ 856   4            }
+ 857   3      
+ 858   3            IapEraseSector((AddrBase+(i*6)) & 0xFE00 );
+ 859   3      
+ 860   3            for(j=0;j<4;j++)
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 15  
+
+ 861   3            {
+ 862   4              IapReadBytes(TEMP_ADDRESS + j * 128, temp, 128);
+ 863   4              IapProgramBytes(AddrBase + (i*6) & 0xFE00 + j*128, temp, 128);
+ 864   4            }
+ 865   3      
+ 866   3            IapEraseSector(TEMP_ADDRESS);
+ 867   3            
+ 868   3            return 1;
+ 869   3          }
+ 870   2        }
+ 871   1        return 0;
+ 872   1        
+ 873   1      } 
+ 874          
+ 875          
+ 876          
+ 877          /**********************************************************
+ 878          删除黑名单
+ 879          ***********************************************************/ 
+ 880          
+ 881          uchar Record2BlackList(uchar iType, uchar *list)
+ 882          {
+ 883   1        uchar xdata temp[128];  
+ 884   1        uchar  ucCardNo[6];
+ 885   1        uint  i = 0;
+ 886   1        uchar  k;
+ 887   1        uchar  j = 0;
+ 888   1        uchar  m = 0;
+ 889   1        uint  AddrBase = BLACK_LIST;
+ 890   1      
+ 891   1        if(iType == MANAGER_CARD)
+ 892   1          AddrBase = MGR_BLACK_LIST;
+ 893   1      
+ 894   1        for(i=0; i<4; i++)
+ 895   1          temp[i]=list[i];
+ 896   1        
+ 897   1        for(i=0;i<1024;i++)
+ 898   1        { 
+ 899   2          IapReadBytes(AddrBase + i*6, ucCardNo, 6);
+ 900   2      
+ 901   2          if(ucCardNo[0] == 0xFF 
+ 902   2            && ucCardNo[1] == 0xFF 
+ 903   2            && ucCardNo[2] == 0xFF )
+ 904   2            {
+ 905   3              temp[4] = 0;
+ 906   3              temp[5] = 0xFF;
+ 907   3              
+ 908   3              IapProgramBytes(AddrBase + 6 * i,temp,5);
+ 909   3              return 1;
+ 910   3            }
+ 911   2          
+ 912   2          if( ucCardNo[0] == list[0]
+ 913   2            && ucCardNo[1] == list[1]
+ 914   2            && ucCardNo[2] == list[2] )
+ 915   2          {  
+ 916   3            for(j=0;j<4;j++)
+ 917   3            {
+ 918   4              IapReadBytes(AddrBase + (i*6)&0xFE00 + j*128, temp, 128);
+ 919   4      
+ 920   4              for(k=0;k<32;k++)
+ 921   4              {
+ 922   5                if(temp[6*k] == list[0]
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 16  
+
+ 923   5                  &&temp[6*k+1] == list[1]
+ 924   5                  &&temp[6*k+2] == list[2])
+ 925   5                {           
+ 926   6                  temp[6*k+4] =0x0;
+ 927   6                  
+ 928   6                  break;
+ 929   6                }
+ 930   5              }
+ 931   4              
+ 932   4              IapProgramBytes(TEMP_ADDRESS + j * 128, temp, 128);
+ 933   4            }
+ 934   3      
+ 935   3            IapEraseSector((AddrBase+(i*6)) & 0xFE00 );
+ 936   3      
+ 937   3            for(j=0;j<4;j++)
+ 938   3            {
+ 939   4              IapReadBytes(TEMP_ADDRESS + j * 128, temp, 128);
+ 940   4              IapProgramBytes(AddrBase + (i*6)&0xFE00 + j*128, temp,  128);
+ 941   4            }
+ 942   3      
+ 943   3            IapEraseSector(TEMP_ADDRESS);
+ 944   3            
+ 945   3            return 2;
+ 946   3          }
+ 947   2        }
+ 948   1        return 0;
+ 949   1        
+ 950   1      }  
+ 951          
+ 952          
+ 953          /**********************************************************
+ 954          
+ 955          **************************************************************/
+ 956          uchar CheckBlackList(uchar iType, uchar *list, uchar* pData )
+ 957          {
+ 958   1        uint  i=0;  
+ 959   1        uchar  ucCardNo[6];
+ 960   1        uint  AddrBase = BLACK_LIST;
+ 961   1      
+ 962   1        *pData = 0xFF;
+ 963   1      
+ 964   1        if(iType == MANAGER_CARD)
+ 965   1          AddrBase = MGR_BLACK_LIST;
+ 966   1        
+ 967   1        for(i=0;i < 1024; i++)
+ 968   1        { 
+ 969   2          IapReadBytes(AddrBase + i*6, ucCardNo, 6);
+ 970   2      
+ 971   2          if(ucCardNo[0] == 0xFF 
+ 972   2            && ucCardNo[1] == 0xFF 
+ 973   2            && ucCardNo[2] == 0xFF )
+ 974   2            {
+ 975   3              return NOINBLACKLIST;
+ 976   3            }
+ 977   2          
+ 978   2          if( ucCardNo[0] == list[0]
+ 979   2            && ucCardNo[1] == list[1]
+ 980   2            && ucCardNo[2] == list[2] )
+ 981   2          {
+ 982   3            *pData = ucCardNo[5];
+ 983   3            if(ucCardNo[4] == 0x00)
+ 984   3              return INBLACKLIST;
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 17  
+
+ 985   3            
+ 986   3            return BLACKLISTSTATUS;
+ 987   3          }
+ 988   2        }
+ 989   1        return NOINBLACKLIST;
+ 990   1      }
+ 991          
+ 992          
+ 993          /**********************************************************
+ 994          
+ 995          **************************************************************/
+ 996          //uchar CheckReverseData(uchar iType, uchar *list, uchar ucData, uchar *pCheckData)
+ 997          //{
+ 998          //  uint  i=0;
+ 999          //  uchar  temp[6];
+1000          //  uint  AddrBase = BLACK_LIST;
+1001          
+1002          //  if(iType == MANAGER_CARD)
+1003          //    AddrBase = MGR_BLACK_LIST;
+1004          //  
+1005          //  for(i=0;i < 1024; i++)
+1006          //  {
+1007          //    IapReadBytes(AddrBase + 6*i,temp,6);
+1008          //    
+1009          //    if(temp[0] == 0xFF 
+1010          //      &&temp[1] == 0xFF 
+1011          //      &&temp[2] == 0xFF )
+1012          //      return REVERSE_CHECK_OK;
+1013          //    
+1014          //    if(temp[0] == list[0] 
+1015          //      && temp[1] == list[1]
+1016          //      && temp[2] == list[2])
+1017          //    {
+1018          //      *pCheckData = temp[5];
+1019          //      if(temp[5] == ucData)
+1020          //        return REVERSE_CHECK_OK;
+1021          //      return REVERSE_CHECK_ERROR;
+1022          //    }
+1023          //  }
+1024          //  return REVERSE_CHECK_ERROR;
+1025          //}
+1026          
+1027          
+1028          /*----------------------------
+1029          扇区擦除
+1030          ----------------------------*/
+1031          void IapEraseSector(uint addr)
+1032          {
+1033   1          IAP_CONTR = ENABLE_IAP;         //使能IAP
+1034   1          IAP_CMD = CMD_ERASE;            //设置IAP命令
+1035   1          IAP_ADDRL = addr;               //设置IAP低地址
+1036   1          IAP_ADDRH = addr >> 8;          //设置IAP高地址
+1037   1          IAP_TRIG = 0x5a;                //写触发命令(0x5a)
+1038   1          IAP_TRIG = 0xa5;                //写触发命令(0xa5)
+1039   1          _nop_();                        //等待ISP/IAP/EEPROM操作完成
+1040   1          IapIdle();
+1041   1      }
+1042          
+1043          
+1044          /* 
+1045          //  写数据进数据Flash存储器(EEPROM),  只在同一个扇区内写，
+1046          //  保留同一扇区中不需修改的数据    */
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 18  
+
+1047          /*   begin_addr,被写数据Flash开始地址；
+1048          //  counter,连续写多少个字节；
+1049          //  array[]，数据来源       */
+1050          //uchar write_flash_with_protect_in_one_sector(WORD begin_addr, WORD counter, BYTE array[])
+1051          //{
+1052          //    WORD i = 0;
+1053          //    WORD in_sector_begin_addr = 0;
+1054          //    WORD sector_addr = 0;
+1055          //    WORD byte_addr = 0;
+1056          
+1057          //    /* 判是否是有效范围,此函数不允许跨扇区操作 */
+1058          //    if(counter > USED_BYTE_QTY_IN_ONE_SECTOR)
+1059          //        return ERROR;
+1060          //    in_sector_begin_addr = begin_addr & 0x01ff;
+1061          //  
+1062          //    /* 假定从扇区的第0个字节开始，到USED_BYTE_QTY_IN_ONE_SECTOR-1个字节结束,后面部分不用,程序易编写 */
+1063          //    if((in_sector_begin_addr + counter) > USED_BYTE_QTY_IN_ONE_SECTOR)
+1064          //        return ERROR;
+1065          
+1066          //    /* 将该扇区数据 0 - (USED_BYTE_QTY_IN_ONE_SECTOR-1) 字节数据读入缓冲区保护 */
+1067          //    sector_addr = (begin_addr & 0xfe00);
+1068          //    byte_addr = sector_addr;
+1069          
+1070          //    for(i = 0; i < USED_BYTE_QTY_IN_ONE_SECTOR; i++)
+1071          //    {
+1072          //        protect_buffer[i] = IapReadByte(byte_addr++);
+1073          //    }
+1074          
+1075          //    /* 将要写入的数据写入保护缓冲区的相应区域,其余部分保留 */
+1076          //    for(i = 0; i < counter; i++)
+1077          //    {
+1078          //        protect_buffer[in_sector_begin_addr++] = array[i];
+1079          //    }
+1080          
+1081          //    /* 擦除 要修改/写入 的扇区 */
+1082          //    IapEraseSector(sector_addr);
+1083          
+1084          //    /* 将保护缓冲区的数据写入 Data Flash, EEPROM */
+1085          //    byte_addr = sector_addr;
+1086          //    for(i = 0; i< USED_BYTE_QTY_IN_ONE_SECTOR; i++)
+1087          //    {
+1088          //        /* 写一个字节 */
+1089          //        IapProgramByte(byte_addr, protect_buffer[i]);
+1090          //        /*  比较对错 */
+1091                //  if (SendData(IapReadByte(begin_addr)) != protect_buffer[i])
+1092                // {
+1093                //      IapIdle();
+1094                //      return ERROR;
+1095                //  }
+1096          //        byte_addr++;
+1097          //    }
+1098          //    IapIdle();
+1099          //    return OK;
+1100          //}
+1101          
+1102          
+1103          /******************************************************
+1104          //写偏移数据
+1105          
+1106          //*******************************************************/
+1107          
+1108          //uchar WriteOffset(uchar chData)
+C51 COMPILER V9.53.0.0   EEPROM                                                            08/21/2017 21:04:33 PAGE 19  
+
+1109          //{
+1110          //  if(IapReadByte(OFFSET_ADDR)==0xff)
+1111          //  {
+1112          //     IapProgramByte(OFFSET_ADDR, chData);
+1113          //     return 1;
+1114          //  }
+1115          //  return 0;
+1116          //}
+1117          
+1118          
+1119          /******************************************************
+1120          //读偏移数据
+1121          
+1122          //*******************************************************/
+1123          
+1124          //uchar ReadOffset()
+1125          //{
+1126          //  uint i=0;
+1127          //  uchar temp;
+1128          //  temp
+1129          //  if(IapReadByte(OFFSET_ADDR)==0xff)
+1130          //  {
+1131          //    return 0;
+1132          //  }
+1133          //  return 0;
+1134          //}  
+1135          
+1136          
+1137          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   3174    ----
+   CONSTANT SIZE    =    116    ----
+   XDATA SIZE       =   ----     484
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----     123
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

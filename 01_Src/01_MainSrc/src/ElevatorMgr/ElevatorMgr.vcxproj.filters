@@ -1,0 +1,377 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Comm\AdvancCardSet.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DelOkDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AuthAddDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AuthModDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BlackListDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\ConfigInfo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CustermerInfoDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomerDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\DBManage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgProtocolDemo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FuncInfoDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ElevatorDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ElevatorInfoDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FloorCodeDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FloorDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FuncDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\Keyinfoset.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RadioCardProtocal.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LoginDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\Loginset.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MakeCardDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\MakeCardSet.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ManagerDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ManagerInfoDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ManagerProxyDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ProxyCardDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ProxyDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\ProxySet.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="QurryDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\quset.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="HelpDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\Yonghuset.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="XTabCtrl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ElevatorMgrDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ElevatorMgr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\Suoset.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SetDBDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SetCommDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SetAuthDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\SerialProtocol.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgMakeCardInfo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\AgentIDRecord.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Comm\OffsetRecord.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Comm\AdvancCardSet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Define.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AuthAddDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AuthModDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BlackListDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\ConfigInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CustermerInfoDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomerDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\DBManage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DelOkDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgProtocolDemo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ElevatorDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ElevatorInfoDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FloorCodeDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FloorDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FuncDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FuncInfoDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\Keyinfoset.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LoginDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\Loginset.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MakeCardDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\MakeCardSet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ManagerDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ManagerInfoDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ManagerProxyDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ProxyCardDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ProxyDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\ProxySet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="QurryDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\quset.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RadioCardProtocal.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\SerialProtocol.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SetAuthDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SetCommDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SetDBDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\Suoset.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ElevatorMgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ElevatorMgrDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="HelpDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="XTabCtrl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\Yonghuset.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgMakeCardInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\AgentIDRecord.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Comm\OffsetRecord.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\help.txt" />
+    <None Include="res\icon2.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\key1.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\icon3.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\icon4.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\icon8.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\icon9.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\ElevatorMgr.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="resource.hm">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\ElevatorMgr.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\toolbar1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\业主卡1.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\业主卡1带框.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\公司logo.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\功能卡1.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\功能卡1带框.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\帮助支持1.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\帮助支持1带框.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\电梯管理1.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\管理人卡1.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\管理人卡1带框.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\系统设置1.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\系统设置1带框.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\红.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\绿.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\退出1.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\退出1带框.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\高级功能.ico">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{34c9b844-2ae8-49db-ab25-ee0e4326e597}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{9b0a3c37-6095-4102-ad62-d92b4aab5427}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{369ae308-73ea-4d5c-8d36-aef79c167b8c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ElevatorMgr.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

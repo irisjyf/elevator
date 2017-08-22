@@ -1,0 +1,25 @@
+﻿<Window x:Class="ElevatorCtrl.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="768" Width="1200
+        ">
+    <Grid>
+        <Button Content="Sys" Height="63" HorizontalAlignment="Left" Margin="20,12,0,0" Name="btnSys" VerticalAlignment="Top" Width="75" MouseLeftButtonUp="btnSysClick" />
+        <Button Content="Custormer" Height="63" HorizontalAlignment="Left" Margin="110,12,0,0" Name="btnCustormer" VerticalAlignment="Top" Width="70" />
+        <Button Content="Manager" Height="63" HorizontalAlignment="Left" Margin="200,12,0,0" Name="btnManager" VerticalAlignment="Top" Width="70" />
+        <Button Content="Elevator" Height="63" HorizontalAlignment="Left" Margin="290,12,0,0" Name="btnElevator" VerticalAlignment="Top" Width="70" />
+        <Button Content="Advance" Height="63" HorizontalAlignment="Left" Margin="380,12,0,0" Name="btnAdvance" VerticalAlignment="Top" Width="70" />
+        <Button Content="Button" Height="63" HorizontalAlignment="Left" Margin="470,12,0,0" Name="button3" VerticalAlignment="Top" Width="70" />
+        <TabControl Height="600" HorizontalAlignment="Left" Margin="20,90,0,0" Name="tabsys" VerticalAlignment="Top" Width="1080">
+            <TabItem Header="通讯" Name="tabCommunicate">
+                <Grid />
+            </TabItem>
+            <TabItem Header="电梯" Name="tabEleva">
+                <Grid />
+            </TabItem>
+            <TabItem Header="tabItem1" Name="tabItem1">
+                <Grid />
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

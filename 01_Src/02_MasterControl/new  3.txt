@@ -1,0 +1,253 @@
+检查使用次数
+
+unsigned char CheckUseCount()
+{
+	if( MI_RD_OK != readDataFromIc(cardkey,SECTION_2,temp1) )
+		return Do_false;
+	leave_count=temp1[0]*256+temp1[1] ;
+	if(leave_count <= 0)
+		return Do_false;
+	
+	leave_count--;
+	temp1[0]=leave_count/256;
+	temp1[1]=leave_count%256;
+	writeDataToIc(cardkey,SECTION_2,temp1);
+	
+	return Do_true;
+}
+
+//操作电梯按钮
+void DealElevatorBtn(uchar *pdata)
+{		
+	if(0==confirmSingleOrMulti(pdata + 1))
+	{
+		enableKey(pdata+1);
+		pressButton(pdata+1);
+	}
+	else
+	{
+		enableKey(pdata + 1);
+		//PcdHalt();
+		setBeep();
+	}
+}
+//处理扇区中指定的电梯，操作电梯按钮
+unsigned char DealElevatorIndex(unsigned char chIndex)
+{
+	if( MI_RD_OK != readDataFromIc(cardkey,chIndex,temp1))
+		return Do_false;
+		
+	//匹配电梯号
+	if(getCode() != temp1[0])
+		return Do_false;
+		
+	//操作电梯按钮
+	DealElevatorBtn(temp1);
+	
+	return Do_true;
+}
+//处理电梯
+void DealElevator(uchar nType)
+{
+	if(nType & 0x01==1) //不指定楼梯
+	{						
+		enableKey(ENABLEALL); //使能按钮
+	}
+	else if(nType & 0x01==0) //指定楼梯
+	{
+		DealElevatorIndex(SECTION_3);
+		DealElevatorIndex(SECTION_4);
+		DealElevatorIndex(SECTION_5);
+	}
+}
+
+bit readProc()
+{
+	unsigned char xdata temp[16];
+	unsigned char xdata temp1[48];
+	unsigned char xdata time[7];
+	unsigned char xdata leave_count_buff[48];
+	unsigned char xdata i=0;
+	unsigned int xdata count=0;
+	unsigned int xdata leave_count=0;
+	
+	//判断业主在不在黑名单中
+	if(GetDevice()==DISABLE)
+		return 0;
+	if(INBLACKLIST==checkBlackList(temp+6))
+		return 0;
+	if(MI_RD_OK==readDataFromIc(cardkey,SHANQUZERO,temp))
+	{
+		switch (temp[4]) //卡类型
+		{
+		case 1://业主卡
+			if(MI_RD_OK != readDataFromIc(cardkey,SHANQUONE,temp))
+				return Do_false;
+			if((temp[0]&0X03)==COUNTLIMIT)
+			{		  						
+				//查验使用次数
+				if( CheckUseCount() != Do_true)
+					return Do_false;
+				DealElevator(temp[1]);
+			}
+			else if((temp[0]&0X03)==DATELIMIT)
+			{
+				readtime(time);
+				for(i=0;i<5;i++)
+					maincmd[i]=time[i];
+				Make(5,7,maincmd);
+				Send(maincmd,9);
+				if(Do_true != checkTimeValide(temp+2,temp+7,time))
+					return Do_false;
+				DealElevator(temp[1]);
+			}
+			else if((temp[0]&0X03)==(COUNTLIMIT|DATELIMIT))
+			{
+				readtime(time);
+				if( CheckUseCount() != Do_true)
+					return Do_false;
+				if(checkTimeValide(temp+2,temp+7,time) != Do_true)
+					return Do_false;
+				DealElevator(temp[1]);
+			}
+			
+			return Do_true;	
+			break;
+		case 2://管理员卡	
+			if(MI_RD_OK != readDataFromIc(cardkey,SHANQUONE,temp))
+				return Do_false;
+			if((temp[0]&0X03)==COUNTLIMIT)
+			{		  						
+				//查验使用次数
+				if( CheckUseCount() != Do_true)
+					return Do_false;
+			}
+			else if((temp[0]&0X03)==DATELIMIT)
+			{
+				readtime(time);
+				for(i=0;i<5;i++)
+					maincmd[i]=time[i];
+				Make(5,7,maincmd);
+				Send(maincmd,9);
+				if(Do_true != checkTimeValide(temp+2,temp+7,time))
+					return Do_false;
+			}
+			else if((temp[0]&0X03)==(COUNTLIMIT|DATELIMIT))
+			{
+				readtime(time);
+				if( CheckUseCount() != Do_true)
+					return Do_false;
+				if(checkTimeValide(temp+2,temp+7,time) != Do_true)
+					return Do_false;
+			}			
+			DealElevator(temp[1]);
+			return Do_true;	
+		case 3://功能卡
+			if(INBLACKLIST==checkBlackList(temp+6))	//判断是否在黑名单中
+			{
+				return 0;
+			}
+			if((temp[5]&0x0f)==1)	  //启禁卡
+			{
+
+				if( MI_RD_OK==readDataFromIc(cardkey,SHANQUTWO,temp1))
+				{
+					count=temp1[0]*256+temp1[1];
+					if(count>0) //次数大于0
+					{   
+
+						if( MI_RD_OK==readDataFromIc(cardkey,SHANQUTHREE,temp1))
+						{
+							if(getCode()==temp1[0])  //是本电梯
+							{
+								if(MI_RD_OK==readDataFromIc(cardkey,SHANQUFOUR,temp1))
+								{
+									if(MI_RD_OK==readDataFromIc(cardkey,SHANQUFIVE,temp1+16))
+									{
+										if(MI_RD_OK==readDataFromIc(cardkey,SHANQUSIX,temp1+32))
+										{	 
+											for(i=0;i<10;i++)
+											{
+												if(temp1[i*4]==0&&temp1[i*4+1]==0&&temp1[i*4+2]==0)
+												{;}
+												else{
+													if(temp1[i*4+3]==0)
+													{	
+														deleteBlackList(temp1+i*4);
+														//temp[0]=count;
+														if(count>0)count--;
+														leave_count_buff[0]=count/256;
+														leave_count_buff[1]=count%256;
+														writeDataToIc(cardkey,SHANQUTWO,leave_count_buff);
+
+														//return 1;
+													}
+													else
+													{
+
+														AddBlackList(temp1+i*4);
+														///temp[0]=count;
+														if(count>0)count--;
+														leave_count_buff[0]=count/256;
+														leave_count_buff[1]=count%256;
+														writeDataToIc(cardkey,SHANQUTWO,leave_count_buff);
+														//setBeep();
+														//dabao(1,42,temp1);
+														//sendcomn2(temp1,47);
+														//return 1;
+													}
+												}
+											}
+											setBeep();
+
+										}
+									}		
+								}  
+							}  
+						}
+					}
+				}						
+			}
+			else if((temp[5]&0x0f)==2) //校时卡
+			{  
+				if(MI_RD_OK==readDataFromIc(cardkey,SHANQUSENVEN,temp1))
+				{
+					maincmd[6]=temp1[0];
+					maincmd[5]=temp1[1];
+					maincmd[3]=temp1[2];
+					maincmd[2]=temp1[3];
+					maincmd[1]=temp1[4];
+					maincmd[0]=temp1[5];
+					maincmd[4]=temp1[6];
+					P8563_settime(maincmd);	
+					setBeep();
+					return 1;
+				}					
+			}
+			else if((temp[5]&0x0f)==3)  //开关卡
+			{
+				setBeep();
+				if((temp[5]&0xf0)==0)//启动
+				{
+					SetDevice(ENABLE);
+					enableKey(a);
+
+					return 1;
+				}
+				else
+				{
+					SetDevice(DISABLE);
+					enableKey(ENABLEALL);
+
+					return 1;
+				}
+			}
+
+			//AddBlackList(temp);
+			//modifyBlackList(0,temp);
+			//deleteBlackList(temp);
+			break;
+		}
+	}
+	return 0;
+}
